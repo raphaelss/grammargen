@@ -7,7 +7,7 @@ void gen_seq(Grammar &g, unsigned k, const std::string& str);
 
 int main(int argc, char **argv) {
 	int n;
-	if (argc < 3 || (n = std::stoi(argv[1])) < 0) {
+	if (argc < 3 || argc % 3 != 0 || (n = std::stoi(argv[1])) < 0) {
 		std::cerr << "Usage: " << argv[0]
 		          << " number_of_iterations [rules]\n"
                           << "       rule = probability char string\n";
