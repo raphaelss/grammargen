@@ -38,17 +38,17 @@ class Entry
       out.puts("\t\t\tr = drand48() * #{@sum};")
       last = @clauses.length - 1
       cum_prob = 0
-      @clauses.each_with_index { |rhs, prob, i|
-        cum_prob += prob
+      @clauses.each_with_index { |arr, i|
+        cum_prob += arr[1]
         case i
 	when 0
-          out.puts("\t\t\tif (r < cum_prob) {")
+          out.puts("\t\t\tif (r < #{cum_prob}) {")
 	when last
-          out.puts("\t\t\t} else if (r < cum_prob) {")
+          out.puts("\t\t\t} else if (r < #{cum_prob}) {")
         else
           out.puts("\t\t\t} else {")
         end
-        out.puts("\t\t\t\tgen_seq(n-1, \"#{rhs}\");")
+        out.puts("\t\t\t\tgen_seq(n-1, \"#{arr[0]}\");")
       }
       out.puts("\t\t\t}")
     end
@@ -67,6 +67,15 @@ class Grammar
     else
       @rules[lhs] = Entry.new(rhs, prob)
     end
+  end
+
+  def deterministic?
+    @rules.each { |lhs, entry|
+      if not entry.single_clause?
+        return false
+      end
+    }
+    return true
   end
 
   def gen_seq(n, str)
@@ -88,7 +97,7 @@ class Grammar
   end
 
   def write_c_preamble(out)
-   out.puts <<END_PREAMBLE
+    out.puts <<END_PREAMBLE
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -100,7 +109,7 @@ gen_seq(int n, const char *str)
 		fwrite(str, 1, strlen(str), stdout);
 		return;
 	}
-	double r;
+	#{if deterministic? then "//" else "" end}double r;
 	do {
 		switch(*str) {
 END_PREAMBLE
@@ -129,13 +138,13 @@ END_POSTAMBLE
 
   def dump_c(path)
     File.open(path, "w") { |out|
-        write_c_preamble(out)
-        @rules.each { |lhs, entry|
-          out.puts("\t\tcase '#{lhs}':")
-          entry.dump_c(out)
-          out.puts("\t\t\tbreak;")
-        }
-	write_c_postamble(out)
+      write_c_preamble(out)
+      @rules.each { |lhs, entry|
+        out.puts("\t\tcase '#{lhs}':")
+        entry.dump_c(out)
+        out.puts("\t\t\tbreak;")
+      }
+      write_c_postamble(out)
     }
   end
 
@@ -179,5 +188,5 @@ end
 
 if __FILE__ == $PROGRAM_NAME
   grammar = Grammar.from_file(ARGV[0])
-  grammar.generate(ARGV[1].to_i)
+  grammar.dump_c(ARGV[1])
 end
