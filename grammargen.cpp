@@ -1,7 +1,7 @@
 /*
  *  This file is parte of grammargen. A tool to generate sequences of
  *  characters from a given grammar.
- *  Copyright (C) 2014 Raphael Santos, http://www.raphaelss.com
+ *  Copyright (C) 2015 Raphael Santos, http://www.raphaelss.com
  *
  *   This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
