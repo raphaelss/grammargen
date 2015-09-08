@@ -18,7 +18,6 @@
  */
 
 #include <cstdio>
-#include <iostream>
 #include <stdexcept>
 #include <string>
 #include "grammar.hpp"
@@ -29,16 +28,15 @@ struct op {
   }
 
   void operator()(const std::string &c) {
-    std::fwrite(c.data(), c.size(), 1, stdout);
+    std::fwrite(c.data(), c.size(), sizeof(std::string::value_type), stdout);
   }
 };
 
 int main(int argc, char **argv) {
   int n;
   if (argc < 3 || argc % 3 != 0 || (n = std::stoi(argv[1])) < 0) {
-    std::cerr << "Usage: " << argv[0]
-              << " axiom number_of_iterations [rules]\n"
-              << "       rule = probability char string\n";
+    fprintf(stderr, "Usage: %s axiom number_of_iterations [rules]\n"
+                    "       rule = probability char string\n", argv[0]);
     return 1;
   }
   Grammar g(argv[2]);
@@ -47,15 +45,12 @@ int main(int argc, char **argv) {
   double prob;
   while (argc) {
     try {
-      prob = std::stod(argv[0]);
+      if ((prob = std::stod(argv[0])) <= 0) {
+        throw std::invalid_argument("not a positive number");
+      }
     } catch (const std::invalid_argument &e) {
-      std::cerr << "grammargen error: "
-                << argv[0] << " is not a positive number\n";
-      return 1;
-    }
-    if (prob <= 0) {
-      std::cerr << "grammargen error: "
-                << argv[0] << " is not a positive number\n";
+      fprintf(stderr, "grammargen error: %s is not a positive number\n",
+              argv[0]);
       return 1;
     }
     g.addRule(argv[1][0], argv[2], prob);
@@ -63,6 +58,6 @@ int main(int argc, char **argv) {
     argv += 3;
   }
   gen_seq<op>(g, n, g.axiom);
-  std::cout << std::endl;
+  putchar('\n');
   return 0;
 }
