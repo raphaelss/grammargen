@@ -17,15 +17,19 @@
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <cstdio>
 #include <iostream>
-#include <string>
 #include <stdexcept>
+#include <string>
 #include "grammar.hpp"
 
 struct op {
-  template <class T>
-  void operator()(T x) {
-    std::cout << x;
+  void operator()(char c) {
+    std::putchar(c);
+  }
+
+  void operator()(const std::string &c) {
+    std::fwrite(c.data(), c.size(), 1, stdout);
   }
 };
 
