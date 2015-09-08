@@ -3,7 +3,7 @@
  *  characters from a given grammar.
  *  Copyright (C) 2015 Raphael Santos, http://www.raphaelss.com
  *
- *   This program is free software: you can redistribute it and/or modify
+ *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -24,13 +24,12 @@
 #include <unordered_map>
 #include <random>
 
-class Grammar
-{
+class Grammar {
 public:
-  Grammar(const std::string& axiom_);
-  void addRule(int lhs, std::string str, double prob=1);
-  const std::string& operator()(int ch);
-  bool hasRule(int ch) const;
+  Grammar(std::string axiom_);
+  void addRule(char lhs, std::string str, double prob=1);
+  const std::string& operator()(char ch);
+  bool hasRule(char ch) const;
 
   std::string axiom;
 
@@ -39,15 +38,34 @@ private:
   {
     void addClause(const std::string& str, double prob=1);
     const std::string& choose(
-      std::discrete_distribution<unsigned>& distr,
-      std::mt19937_64& rndGen);
+        std::discrete_distribution<unsigned>& distr, std::mt19937_64& rndGen);
     std::vector<std::string> clauses;
     std::vector<double> probs;
   };
 
-  std::unordered_map<int, Rule> rules;
+  std::unordered_map<char, Rule> rules;
   std::mt19937_64 rndGen;
   std::discrete_distribution<unsigned> distr;
 };
 
-#endif // GRAMMAR_H
+template <class Op>
+void gen_seq(Grammar &g, unsigned k, const std::string &str, Op op = Op()) {
+  if (k) {
+    for(const auto& ch : str) {
+      if(g.hasRule(ch)) {
+        gen_seq(g, k-1, g(ch), op);
+      } else {
+        op(ch);
+      }
+    }
+  } else {
+    op(str);
+  }
+}
+
+template <class Op>
+void gen_seq(Grammar &g, unsigned k, Op op = Op()) {
+  gen_seq(g, k, g.axiom, op);
+}
+
+#endif

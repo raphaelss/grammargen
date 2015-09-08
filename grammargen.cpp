@@ -3,7 +3,7 @@
  *  characters from a given grammar.
  *  Copyright (C) 2015 Raphael Santos, http://www.raphaelss.com
  *
- *   This program is free software: you can redistribute it and/or modify
+ *  This program is free software: you can redistribute it and/or modify
  *  it under the terms of the GNU Affero General Public License as published by
  *  the Free Software Foundation, either version 3 of the License, or
  *  (at your option) any later version.
@@ -22,14 +22,19 @@
 #include <stdexcept>
 #include "grammar.hpp"
 
-void gen_seq(Grammar &g, unsigned k, const std::string& str);
+struct op {
+  template <class T>
+  void operator()(T x) {
+    std::cout << x;
+  }
+};
 
 int main(int argc, char **argv) {
   int n;
   if (argc < 3 || argc % 3 != 0 || (n = std::stoi(argv[1])) < 0) {
     std::cerr << "Usage: " << argv[0]
-              << " number_of_iterations [rules]\n"
-                          << "       rule = probability char string\n";
+              << " axiom number_of_iterations [rules]\n"
+              << "       rule = probability char string\n";
     return 1;
   }
   Grammar g(argv[2]);
@@ -53,22 +58,7 @@ int main(int argc, char **argv) {
     argc -= 3;
     argv += 3;
   }
-  gen_seq(g, n, g.axiom);
+  gen_seq<op>(g, n, g.axiom);
   std::cout << std::endl;
   return 0;
-}
-
-void gen_seq(Grammar &g, unsigned k, const std::string& str)
-{
-  if (k) {
-    for(const auto& ch : str) {
-      if(g.hasRule(ch)) {
-        gen_seq(g, k-1, g(ch));
-      } else {
-        std::cout << ch;
-      }
-    }
-  } else {
-    std::cout << str;
-  }
 }
