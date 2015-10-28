@@ -34,8 +34,7 @@ public:
   std::string axiom;
 
 private:
-  struct Rule
-  {
+  struct Rule {
     void addClause(const std::string& str, double prob=1);
     const std::string& choose(
         std::discrete_distribution<unsigned>& distr, std::mt19937_64& rndGen);
