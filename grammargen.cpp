@@ -18,6 +18,7 @@
  */
 
 #include <cstdio>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include "grammar.hpp"
@@ -57,7 +58,9 @@ int main(int argc, char **argv) {
     argc -= 3;
     argv += 3;
   }
-  gen_seq<op>(g, n, g.axiom);
+  std::random_device rd{};
+  std::mt19937_64 rndgen{rd()};
+  gen_seq<op>(g, n, g.axiom, rndgen);
   putchar('\n');
   return 0;
 }
