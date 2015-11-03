@@ -50,22 +50,22 @@ public:
 
   template <class Iter, class Rndgen, class Op>
   void gen_seq(unsigned k, Iter begin, Iter end, Rndgen &rndgen, Op op = Op())
-{
-  if (k) {
-    for (; begin != end; ++begin) {
-      if (has_rule(*begin)) {
-        const auto &vec = operator()(*begin, rndgen);
-        gen_seq(k-1, vec.begin(), vec.end(), rndgen, op);
-      } else {
+  {
+    if (k) {
+      for (; begin != end; ++begin) {
+        if (has_rule(*begin)) {
+          const auto &vec = operator()(*begin, rndgen);
+          gen_seq(k-1, vec.begin(), vec.end(), rndgen, op);
+        } else {
+          op(*begin);
+        }
+      }
+    } else {
+      for (; begin != end; ++begin) {
         op(*begin);
       }
     }
-  } else {
-    for (; begin != end; ++begin) {
-      op(*begin);
-    }
   }
-}
 
 private:
   struct Rule {
