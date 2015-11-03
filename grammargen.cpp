@@ -18,6 +18,7 @@
  */
 
 #include <cstdio>
+#include <random>
 #include <stdexcept>
 #include <string>
 #include "grammar.hpp"
@@ -32,6 +33,13 @@ struct op {
   }
 };
 
+std::vector<char> c_str_to_vector(const char *str) {
+  std::vector<char> vec{};
+  while (*str)
+    vec.emplace_back(*str++);
+  return vec;
+}
+
 int main(int argc, char **argv) {
   int n;
   if (argc < 3 || argc % 3 != 0 || (n = std::stoi(argv[1])) < 0) {
@@ -39,7 +47,7 @@ int main(int argc, char **argv) {
                          "       rule = probability char string\n", argv[0]);
     return 1;
   }
-  Grammar g(argv[2]);
+  Grammar<char> g(argv[2][0]);
   argc -= 3;
   argv += 3;
   double prob;
@@ -53,11 +61,13 @@ int main(int argc, char **argv) {
                    argv[0]);
       return 1;
     }
-    g.addRule(argv[1][0], argv[2], prob);
+    g.add_rule(argv[1][0], c_str_to_vector(argv[2]), prob);
     argc -= 3;
     argv += 3;
   }
-  gen_seq<op>(g, n, g.axiom);
+  std::random_device rd{};
+  std::mt19937_64 rndgen{rd()};
+  g.gen_seq(n, rndgen, op());
   putchar('\n');
   return 0;
 }
