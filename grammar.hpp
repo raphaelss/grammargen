@@ -34,7 +34,7 @@ public:
   }
 
   template <class Rndgen>
-  const std::vector<T>& operator()(char ch, Rndgen &rndgen) {
+  const std::vector<T>& operator()(const T &ch, Rndgen &rndgen) {
     return rules.at(ch).choose(distr, rndgen);
   }
 
@@ -93,7 +93,7 @@ private:
 
   T _axiom;
 
-  std::unordered_map<char, Rule> rules;
+  std::unordered_map<T, Rule> rules;
   std::discrete_distribution<unsigned> distr;
 };
 
