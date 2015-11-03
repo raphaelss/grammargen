@@ -20,19 +20,3 @@
 #include "grammar.hpp"
 #include <algorithm>
 
-Grammar::Grammar(std::string axiom_)
-    :axiom(axiom_), rules() {}
-
-void Grammar::addRule(char lhs, std::string str, double prob) {
-  rules[lhs].addClause(str, prob);
-}
-
-bool Grammar::hasRule(char ch) const {
-  return rules.count(ch);
-}
-
-void Grammar::Rule::addClause(const std::string& str, double prob) {
-  clauses.emplace_back(str);
-  probs.emplace_back(prob);
-}
-

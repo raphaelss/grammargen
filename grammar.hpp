@@ -24,27 +24,59 @@
 #include <unordered_map>
 #include <random>
 
+template <class T>
 class Grammar {
 public:
-  Grammar(std::string axiom_);
-  void addRule(char lhs, std::string str, double prob=1);
+  Grammar(T axiom): _axiom(axiom), rules() {}
 
-  template <class RndGen>
-  const std::string& operator()(char ch, RndGen &rndgen) {
+  void add_rule(T lhs, std::vector<T> rhs, double prob) {
+    rules[std::move(lhs)].addClause(std::move(rhs), prob);
+  }
+
+  template <class Rndgen>
+  const std::vector<T>& operator()(char ch, Rndgen &rndgen) {
     return rules.at(ch).choose(distr, rndgen);
   }
 
-  bool hasRule(char ch) const;
+  bool has_rule(const T &x) const {
+    return rules.count(x);
+  }
 
-  std::string axiom;
+  template <class Rndgen, class Op>
+  void gen_seq(unsigned k, Rndgen &rndgen, Op op = Op()) {
+    T *axiom_ptr = &_axiom;
+    gen_seq(k, axiom_ptr, axiom_ptr + 1, rndgen, op);
+  }
+
+  template <class Iter, class Rndgen, class Op>
+  void gen_seq(unsigned k, Iter begin, Iter end, Rndgen &rndgen, Op op = Op())
+{
+  if (k) {
+    for (; begin != end; ++begin) {
+      if (has_rule(*begin)) {
+        const auto &vec = operator()(*begin, rndgen);
+        gen_seq(k-1, vec.begin(), vec.end(), rndgen, op);
+      } else {
+        op(*begin);
+      }
+    }
+  } else {
+    for (; begin != end; ++begin) {
+      op(*begin);
+    }
+  }
+}
 
 private:
   struct Rule {
-    void addClause(const std::string& str, double prob=1);
+    void addClause(std::vector<T> str, double prob=1) {
+      clauses.emplace_back(std::move(str));
+      probs.emplace_back(prob);
+    }
 
-    template <class RndGen>
-    const std::string& choose(
-        std::discrete_distribution<unsigned>& distr, RndGen& rndgen)
+    template <class Rndgen>
+    const std::vector<T>& choose(
+        std::discrete_distribution<unsigned>& distr, Rndgen& rndgen)
     {
       if (clauses.size() == 1) {
         return clauses[0];
@@ -55,34 +87,14 @@ private:
       return clauses[distr(rndgen)];
     }
 
-    std::vector<std::string> clauses;
+    std::vector<std::vector<T>> clauses;
     std::vector<double> probs;
   };
+
+  T _axiom;
 
   std::unordered_map<char, Rule> rules;
   std::discrete_distribution<unsigned> distr;
 };
-
-template <class Op, class RndGen>
-void gen_seq(Grammar &g, unsigned k, const std::string &str,
-             RndGen &rndgen, Op op = Op())
-{
-  if (k) {
-    for(const auto& ch : str) {
-      if(g.hasRule(ch)) {
-        gen_seq(g, k-1, g(ch, rndgen), rndgen, op);
-      } else {
-        op(ch);
-      }
-    }
-  } else {
-    op(str);
-  }
-}
-
-template <class Op, class RndGen>
-void gen_seq(Grammar &g, unsigned k, RndGen &rndgen, Op op = Op()) {
-  gen_seq(g, k, g.axiom, rndgen, op);
-}
 
 #endif
