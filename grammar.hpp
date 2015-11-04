@@ -19,22 +19,36 @@
 
 #ifndef GRAMMAR_HPP_INCLUDED
 #define GRAMMAR_HPP_INCLUDED
-#include <vector>
-#include <string>
-#include <unordered_map>
+
 #include <random>
+#include <unordered_map>
+#include <vector>
+
+#include "branched_seq.hpp"
+
+/*
+namespace impl {
+template <class T>
+constexpr const T &get(const T &x) {
+  return x;
+}
+
+template <class T>
+const T &get(
+}
+*/
 
 template <class T>
 class Grammar {
 public:
   Grammar(T axiom): _axiom(axiom), rules() {}
 
-  void add_rule(T lhs, std::vector<T> rhs, double prob) {
+  void add_rule(T lhs, branched_seq<T> rhs, double prob) {
     rules[std::move(lhs)].addClause(std::move(rhs), prob);
   }
 
   template <class Rndgen>
-  const std::vector<T>& operator()(const T &ch, Rndgen &rndgen) {
+  const branched_seq<T>& operator()(const T &ch, Rndgen &rndgen) {
     return rules.at(ch).choose(distr, rndgen);
   }
 
@@ -43,39 +57,41 @@ public:
   }
 
   template <class Rndgen, class Op>
-  void gen_seq(unsigned k, Rndgen &rndgen, Op op = Op()) {
-    T *axiom_ptr = &_axiom;
-    gen_seq(k, axiom_ptr, axiom_ptr + 1, rndgen, op);
-  }
-
-  template <class Iter, class Rndgen, class Op>
-  void gen_seq(unsigned k, Iter begin, Iter end, Rndgen &rndgen, Op op = Op())
-  {
-    if (k) {
-      for (; begin != end; ++begin) {
-        if (has_rule(*begin)) {
-          const auto &vec = operator()(*begin, rndgen);
-          gen_seq(k-1, vec.begin(), vec.end(), rndgen, op);
-        } else {
-          op(*begin);
+  void apply_rule(unsigned k, const T &x, Rndgen &rndgen, Op &op) {
+    if (has_rule(x)) {
+      const auto &seq = operator()(x, rndgen);
+      if (--k) {
+        for (const auto &elem : seq) {
+          apply_rule(k, boost::get<T>(elem), rndgen, op);
+        }
+      } else {
+        for (const auto &elem : seq) {
+          op(boost::get<T>(elem));
         }
       }
     } else {
-      for (; begin != end; ++begin) {
-        op(*begin);
-      }
+      op(x);
     }
+  }
+
+  template <class Rndgen, class Op>
+  void gen_seq(unsigned k, Rndgen &rndgen, Op op = Op()) {
+    if (k) {
+      apply_rule(k, _axiom, rndgen, op);
+      return;
+    }
+    op(_axiom);
   }
 
 private:
   struct Rule {
-    void addClause(std::vector<T> str, double prob=1) {
+    void addClause(branched_seq<T> str, double prob=1) {
       clauses.emplace_back(std::move(str));
       probs.emplace_back(prob);
     }
 
     template <class Rndgen>
-    const std::vector<T>& choose(
+    const branched_seq<T>& choose(
         std::discrete_distribution<unsigned>& distr, Rndgen& rndgen)
     {
       if (clauses.size() == 1) {
@@ -87,7 +103,7 @@ private:
       return clauses[distr(rndgen)];
     }
 
-    std::vector<std::vector<T>> clauses;
+    std::vector<branched_seq<T>> clauses;
     std::vector<double> probs;
   };
 

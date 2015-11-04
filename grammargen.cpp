@@ -20,24 +20,13 @@
 #include <cstdio>
 #include <random>
 #include <stdexcept>
-#include <string>
 #include "grammar.hpp"
 
-struct op {
-  void operator()(char c) {
-    std::putchar(c);
-  }
-
-  void operator()(const std::string &c) {
-    std::fwrite(c.data(), c.size(), sizeof(std::string::value_type), stdout);
-  }
-};
-
-std::vector<char> c_str_to_vector(const char *str) {
-  std::vector<char> vec{};
+branched_seq<char> c_str_to_branched_seq(const char *str) {
+  branched_seq<char> seq{};
   while (*str)
-    vec.emplace_back(*str++);
-  return vec;
+    seq.emplace_back(*str++);
+  return seq;
 }
 
 int main(int argc, char **argv) {
@@ -61,13 +50,13 @@ int main(int argc, char **argv) {
                    argv[0]);
       return 1;
     }
-    g.add_rule(argv[1][0], c_str_to_vector(argv[2]), prob);
+    g.add_rule(argv[1][0], c_str_to_branched_seq(argv[2]), prob);
     argc -= 3;
     argv += 3;
   }
   std::random_device rd{};
   std::mt19937_64 rndgen{rd()};
-  g.gen_seq(n, rndgen, op());
+  g.gen_seq(n, rndgen, [](char c){std::putchar(c);});
   putchar('\n');
   return 0;
 }
