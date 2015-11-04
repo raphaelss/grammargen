@@ -26,17 +26,19 @@
 
 #include "branched_seq.hpp"
 
-/*
 namespace impl {
+
 template <class T>
 constexpr const T &get(const T &x) {
   return x;
 }
 
 template <class T>
-const T &get(
+const T &get(const typename branched_seq<T>::value_type &x) {
+  return boost::get<T>(x);
 }
-*/
+
+}
 
 template <class T>
 class Grammar {
@@ -62,11 +64,11 @@ public:
       const auto &seq = operator()(x, rndgen);
       if (--k) {
         for (const auto &elem : seq) {
-          apply_rule(k, boost::get<T>(elem), rndgen, op);
+          apply_rule(k, impl::get<T>(elem), rndgen, op);
         }
       } else {
         for (const auto &elem : seq) {
-          op(boost::get<T>(elem));
+          op(impl::get<T>(elem));
         }
       }
     } else {
