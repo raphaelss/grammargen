@@ -18,6 +18,7 @@
  */
 
 #include <cstdio>
+#include <cstdlib>
 #include <random>
 #include <stdexcept>
 #include "grammar.hpp"
@@ -29,6 +30,9 @@ branched_seq<char> c_str_to_branched_seq(const char *str) {
   return seq;
 }
 
+template <class T>
+using container = std::vector<T>;
+
 int main(int argc, char **argv) {
   int n;
   if (argc < 3 || argc % 3 != 0 || (n = std::stoi(argv[1])) < 0) {
@@ -36,7 +40,7 @@ int main(int argc, char **argv) {
                          "       rule = probability char string\n", argv[0]);
     return 1;
   }
-  Grammar<char> g(argv[2][0]);
+  Grammar<char, container> g(argv[2][0]);
   argc -= 3;
   argv += 3;
   double prob;
@@ -50,7 +54,9 @@ int main(int argc, char **argv) {
                    argv[0]);
       return 1;
     }
-    g.add_rule(argv[1][0], c_str_to_branched_seq(argv[2]), prob);
+    g.add_rule(argv[1][0],
+               container<char>(argv[2], argv[2] + std::strlen(argv[2])),
+               prob);
     argc -= 3;
     argv += 3;
   }
